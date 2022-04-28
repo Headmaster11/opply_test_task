@@ -9,7 +9,7 @@ user_password = 'some_password'
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
-        django_get_or_create = ('username',)
+        django_get_or_create = ('username', 'email')
 
     username = factory.faker.Faker('word')
     email = factory.faker.Faker('ascii_email')

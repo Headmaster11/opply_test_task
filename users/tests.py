@@ -3,6 +3,7 @@ from rest_framework.reverse import reverse
 from rest_framework import status
 
 from fixtures.basic_test import BasicTestCase
+from fixtures import factories
 
 
 class UserTests(BasicTestCase):
@@ -50,3 +51,27 @@ class UserTests(BasicTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(user_count + 1, User.objects.count())
+
+    def test_login(self):
+        data = {
+            "username": self.user.username,
+            "password": factories.user_password,
+        }
+        response = self.client.post(
+            reverse('users-login'),
+            data=data,
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(list(response.data), ['refresh', 'access'])
+
+    def test_order_history(self):
+        response = self.client.get(
+            reverse('users-order-history'),
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.client.force_authenticate(user=self.user, token=self.jwt_response.data['access'])
+        response = self.client.get(
+            reverse('users-order-history'),
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
