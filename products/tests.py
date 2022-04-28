@@ -40,6 +40,7 @@ class ProductTests(BasicTestCase):
     def test_order(self):
         count = UserOrder.objects.count()
         product = Product.objects.first()
+        quantity = product.quantity_in_stock
         request_data = {
             'amount': 1,
         }
@@ -57,6 +58,7 @@ class ProductTests(BasicTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(count + 1, UserOrder.objects.count())
+        self.assertEqual(quantity - 1, Product.objects.get(pk=product.pk).quantity_in_stock)
         response = self.client.post(
             reverse('products-order', args=[product.pk]),
             data={'amount': product.quantity_in_stock + 1},
@@ -64,3 +66,4 @@ class ProductTests(BasicTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(count + 1, UserOrder.objects.count())
+        self.assertEqual(quantity - 1, Product.objects.get(pk=product.pk).quantity_in_stock)
