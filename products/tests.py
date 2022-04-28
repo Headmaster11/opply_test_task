@@ -5,6 +5,7 @@ from fixtures.basic_test import BasicTestCase
 from products.pagination import ProductPagination
 from products.models import Product
 from products.serializers import ProductSerializer
+from users.models import UserOrder
 
 
 class ProductTests(BasicTestCase):
@@ -35,3 +36,24 @@ class ProductTests(BasicTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, ProductSerializer(instance=product).data)
+
+    def test_order(self):
+        count = UserOrder.objects.count()
+        product = Product.objects.first()
+        request_data = {
+            'amount': 1,
+        }
+        response = self.client.post(
+            reverse('products-order', args=[product.id]),
+            data=request_data,
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.client.force_authenticate(user=self.user, token=self.jwt_response.data['access'])
+        response = self.client.post(
+            reverse('products-order', args=[product.id]),
+            data=request_data,
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(count + 1, UserOrder.objects.count())

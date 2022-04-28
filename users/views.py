@@ -2,10 +2,12 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, permissions
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from users.serializers import UserCreateSerializer, UserLoginSerializer
 from users.utils import get_tokens_for_user
+
+User = get_user_model()
 
 
 class UserViewSet(GenericViewSet):

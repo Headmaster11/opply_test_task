@@ -1,8 +1,10 @@
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.reverse import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from fixtures import factories
+
+User = get_user_model()
 
 
 class BasicTestCase(APITestCase):
