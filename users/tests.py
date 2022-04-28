@@ -4,6 +4,8 @@ from rest_framework import status
 
 from fixtures.basic_test import BasicTestCase
 from fixtures import factories
+from users.models import UserOrder
+from users.serializers import UserOrderSerializer
 
 User = get_user_model()
 
@@ -67,13 +69,30 @@ class UserTests(BasicTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(list(response.data), ['refresh', 'access'])
 
-    def test_order_history(self):
-        response = self.client.get(
-            reverse('users-order-history'),
-        )
+
+class UserOrderTests(BasicTestCase):
+    def test_list(self):
+        response = self.client.get(reverse('user_orders-list'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.client.force_authenticate(user=self.user, token=self.jwt_response.data['access'])
-        response = self.client.get(
-            reverse('users-order-history'),
-        )
+        response = self.client.get(reverse('user_orders-list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data,
+            UserOrderSerializer(instance=UserOrder.objects.filter(user=self.user).order_by('-created_at'), many=True).data
+        )
+
+    def test_retrieve(self):
+        order = UserOrder.objects.filter(user=self.user).first()
+        response = self.client.get(reverse('user_orders-detail', args=[order.pk]))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.client.force_authenticate(user=self.user, token=self.jwt_response.data['access'])
+        response = self.client.get(reverse('user_orders-detail', args=[order.pk]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, UserOrderSerializer(instance=order).data)
+
+    def test_retrieve_alien(self):
+        order = UserOrder.objects.exclude(user=self.user).first()
+        self.client.force_authenticate(user=self.user, token=self.jwt_response.data['access'])
+        response = self.client.get(reverse('user_orders-detail', args=[order.pk]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

@@ -1,9 +1,12 @@
 import factory
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 
 from products.models import Product
+from users.models import UserOrder
+
+User = get_user_model()
 
 user_password = 'some_password'
 
@@ -29,3 +32,12 @@ class ProductFactory(factory.django.DjangoModelFactory):
     name = factory.Faker('word')
     price = factory.Faker('pydecimal', left_digits=4, right_digits=2, positive=True)
     quantity_in_stock = factory.Faker('pyint', min_value=0)
+
+
+class UserOrderFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = UserOrder
+
+    user = factory.SubFactory(UserFactory)
+    product = factory.SubFactory(ProductFactory)
+    amount = factory.Faker('pyint', min_value=1)

@@ -22,17 +22,17 @@ class ProductTests(BasicTestCase):
         paginator = ProductPagination()
         self.assertEqual(len(response.data['results']), paginator.page_size)
         queryset = Product.objects.filter(quantity_in_stock__gt=0).order_by('id')[:paginator.page_size]
-        self.assertQuerysetEqual(response.data['results'], ProductSerializer(instance=queryset, many=True).data)
+        self.assertEqual(response.data['results'], ProductSerializer(instance=queryset, many=True).data)
 
     def test_retrieve(self):
         product = Product.objects.first()
         response = self.client.get(
-            reverse('products-detail', args=[product.id])
+            reverse('products-detail', args=[product.pk])
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.client.force_authenticate(user=self.user, token=self.jwt_response.data['access'])
         response = self.client.get(
-            reverse('products-detail', args=[product.id])
+            reverse('products-detail', args=[product.pk])
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, ProductSerializer(instance=product).data)
@@ -44,16 +44,23 @@ class ProductTests(BasicTestCase):
             'amount': 1,
         }
         response = self.client.post(
-            reverse('products-order', args=[product.id]),
+            reverse('products-order', args=[product.pk]),
             data=request_data,
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.client.force_authenticate(user=self.user, token=self.jwt_response.data['access'])
         response = self.client.post(
-            reverse('products-order', args=[product.id]),
+            reverse('products-order', args=[product.pk]),
             data=request_data,
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(count + 1, UserOrder.objects.count())
+        response = self.client.post(
+            reverse('products-order', args=[product.pk]),
+            data={'amount': product.quantity_in_stock + 1},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(count + 1, UserOrder.objects.count())

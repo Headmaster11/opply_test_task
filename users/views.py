@@ -1,11 +1,12 @@
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, permissions
 from django.contrib.auth import get_user_model
 
-from users.serializers import UserCreateSerializer, UserLoginSerializer
+from users.serializers import UserCreateSerializer, UserLoginSerializer, UserOrderSerializer
 from users.utils import get_tokens_for_user
+from users.models import UserOrder
 
 User = get_user_model()
 
@@ -33,8 +34,10 @@ class UserViewSet(GenericViewSet):
         serializer.save()
         return Response(get_tokens_for_user(serializer.instance), status.HTTP_200_OK)
 
-    @action(methods=['GET'], detail=False, permission_classes=(permissions.IsAuthenticated,))
-    def order_history(self, request):
-        user = request.user
-        # todo business logic
-        return Response()
+
+class UserOrderViewSet(ReadOnlyModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = UserOrderSerializer
+
+    def get_queryset(self):
+        return UserOrder.objects.filter(user=self.request.user).order_by('-created_at')

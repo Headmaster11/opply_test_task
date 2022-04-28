@@ -17,4 +17,7 @@ class BasicTestCase(APITestCase):
             data={'username': cls.user.username, 'password': factories.user_password},
             format='json',
         )
-        factories.ProductFactory.create_batch(1000)
+        factories.ProductFactory.create_batch(100)
+        factories.UserOrderFactory.create_batch(10, user=cls.user)
+        another_user = factories.UserFactory.create()
+        factories.UserOrderFactory.create_batch(10, user=another_user)

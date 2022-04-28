@@ -1,5 +1,7 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
 from products.models import Product
 from users.models import UserOrder
@@ -18,5 +20,12 @@ class ProductOrderSerializer(serializers.Serializer):
     amount = serializers.IntegerField(min_value=1)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
+    @transaction.atomic()
     def create(self, validated_data) -> UserOrder:
-        return UserOrder.objects.create(**validated_data)
+        instance = UserOrder.objects.create(**validated_data)
+        product = validated_data['product']
+        if validated_data['amount'] > product.quantity_in_stock:
+            raise ValidationError('incorrect amount')
+        product.quantity_in_stock -= validated_data['amount']
+        product.save()
+        return instance
