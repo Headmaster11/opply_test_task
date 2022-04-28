@@ -40,4 +40,4 @@ class UserOrderViewSet(ReadOnlyModelViewSet):
     serializer_class = UserOrderSerializer
 
     def get_queryset(self):
-        return UserOrder.objects.filter(user=self.request.user).order_by('-created_at')
+        return UserOrder.objects.filter(user=self.request.user).order_by('-created_at').select_related('product')

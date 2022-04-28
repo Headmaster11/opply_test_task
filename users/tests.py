@@ -72,6 +72,8 @@ class UserTests(BasicTestCase):
 
 class UserOrderTests(BasicTestCase):
     def test_list(self):
+        def call_route():
+            self.client.get(reverse('user_orders-list'))
         response = self.client.get(reverse('user_orders-list'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.client.force_authenticate(user=self.user, token=self.jwt_response.data['access'])
@@ -81,6 +83,7 @@ class UserOrderTests(BasicTestCase):
             response.data,
             UserOrderSerializer(instance=UserOrder.objects.filter(user=self.user).order_by('-created_at'), many=True).data
         )
+        self.assertNumQueries(1, call_route)
 
     def test_retrieve(self):
         order = UserOrder.objects.filter(user=self.user).first()

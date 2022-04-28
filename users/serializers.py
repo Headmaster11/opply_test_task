@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 
 from users.models import UserOrder
+from products.serializers import ProductSerializer
 
 User = get_user_model()
 
@@ -28,3 +29,5 @@ class UserOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserOrder
         fields = '__all__'
+
+    product = ProductSerializer()
